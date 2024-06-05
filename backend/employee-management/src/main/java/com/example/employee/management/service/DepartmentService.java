@@ -1,11 +1,13 @@
 package com.example.employee.management.service;
 
 import com.example.employee.management.model.Department;
+import com.example.employee.management.model.Employee;
 import com.example.employee.management.repositories.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DepartmentService {
@@ -19,6 +21,10 @@ public class DepartmentService {
 
     public Department createDepartment(Department department) {
         return departmentRepository.save(department);
+    }
+
+    public Optional<Department> getDepartmentById(Long id) {
+        return departmentRepository.findById(id);
     }
 
     public Department updateDepartment(Long id, Department department) {

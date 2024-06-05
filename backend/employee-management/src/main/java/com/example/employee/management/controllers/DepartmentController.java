@@ -3,6 +3,7 @@ package com.example.employee.management.controllers;
 import com.example.employee.management.dto.DepartmentDto;
 import com.example.employee.management.model.Department;
 import com.example.employee.management.repositories.DepartmentRepository;
+import com.example.employee.management.service.DepartmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,38 +14,42 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/departments")
 public class DepartmentController {
 
+    private DepartmentService departmentService;
+
     @Autowired
-    private DepartmentRepository departmentRepository;
+    public DepartmentController(DepartmentService departmentService) {
+        this.departmentService = departmentService;
+    }
 
     @GetMapping
     public List<DepartmentDto> getAllDepartments() {
-        List<Department> departments = departmentRepository.findAll();
+        List<Department> departments = departmentService.getAllDepartments();
         return departments.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     @PostMapping
     public void createDepartment(@RequestBody DepartmentDto departmentDto) {
         Department department = convertToEntity(departmentDto);
-        departmentRepository.save(department);
+        departmentService.createDepartment(department);
     }
 
     @PutMapping("/{id}")
     public void updateDepartment(@PathVariable Long id, @RequestBody DepartmentDto departmentDto) {
-        Department department = departmentRepository.findById(id).orElseThrow();
+        Department department = departmentService.getDepartmentById(id).orElseThrow();
         department.setName(departmentDto.getName());
         department.setNote(departmentDto.getNote());
         if (departmentDto.getParentDepartmentId() != null) {
-            Department parent = departmentRepository.findById(departmentDto.getParentDepartmentId()).orElseThrow();
+            Department parent = departmentService.getDepartmentById(departmentDto.getParentDepartmentId()).orElseThrow();
             department.setParentDepartment(parent);
         } else {
             department.setParentDepartment(null);
         }
-        departmentRepository.save(department);
+        departmentService.createDepartment(department);
     }
 
     @DeleteMapping("/{id}")
     public void deleteDepartment(@PathVariable Long id) {
-        departmentRepository.deleteById(id);
+        departmentService.deleteDepartment(id);
     }
 
     private DepartmentDto convertToDto(Department department) {
@@ -64,7 +69,7 @@ public class DepartmentController {
         department.setName(dto.getName());
         department.setNote(dto.getNote());
         if (dto.getParentDepartmentId() != null) {
-            Department parent = departmentRepository.findById(dto.getParentDepartmentId()).orElseThrow();
+            Department parent = departmentService.getDepartmentById(dto.getParentDepartmentId()).orElseThrow();
             department.setParentDepartment(parent);
         }
         return department;

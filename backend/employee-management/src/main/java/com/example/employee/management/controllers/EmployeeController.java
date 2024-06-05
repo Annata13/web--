@@ -8,6 +8,9 @@ import com.example.employee.management.model.Profession;
 import com.example.employee.management.repositories.DepartmentRepository;
 import com.example.employee.management.repositories.EmployeeRepository;
 import com.example.employee.management.repositories.ProfessionRepository;
+import com.example.employee.management.service.DepartmentService;
+import com.example.employee.management.service.EmployeeService;
+import com.example.employee.management.service.ProfessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,46 +21,53 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/employees")
 public class EmployeeController {
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+
+    private EmployeeService employeeService;
+
+    private DepartmentService departmentService;
+
+    private ProfessionService professionService;
 
     @Autowired
-    private DepartmentRepository departmentRepository;
-
-    @Autowired
-    private ProfessionRepository professionRepository;
+    public EmployeeController(EmployeeService employeeService, DepartmentService departmentService, ProfessionService professionService) {
+        this.employeeService = employeeService;
+        this.departmentService = departmentService;
+        this.professionService = professionService;
+    }
 
     @GetMapping
     public List<EmployeeDto> getAllEmployees() {
-        List<Employee> employees = employeeRepository.findAll();
+        List<Employee> employees = employeeService.getAllEmployees();
         return employees.stream().map(this::convertToDto).collect(Collectors.toList());
     }
+
+
 
     @PostMapping
     public void createEmployee(@RequestBody EmployeeDto employeeDto) {
         Employee employee = convertToEntity(employeeDto);
-        employeeRepository.save(employee);
+        employeeService.createEmployee(employee);
     }
 
     @PutMapping("/{id}")
     public void updateEmployee(@PathVariable Long id, @RequestBody EmployeeDto employeeDto) {
-        Employee employee = employeeRepository.findById(id).orElseThrow();
+        Employee employee = employeeService.getEmployeeById(id).orElseThrow();
         employee.setName(employeeDto.getName());
         employee.setNote(employeeDto.getNote());
         if (employeeDto.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(employeeDto.getDepartmentId()).orElseThrow();
+            Department department = departmentService.getDepartmentById(employeeDto.getDepartmentId()).orElseThrow();
             employee.setDepartment(department);
         }
         if (employeeDto.getProfessionId() != null) {
-            Profession profession = professionRepository.findById(employeeDto.getProfessionId()).orElseThrow();
+            Profession profession = professionService.getProfessionById(employeeDto.getProfessionId()).orElseThrow();
             employee.setProfession(profession);
         }
-        employeeRepository.save(employee);
+        employeeService.updateEmployee(id,employee);
     }
 
     @DeleteMapping("/{id}")
     public void deleteEmployee(@PathVariable Long id) {
-        employeeRepository.deleteById(id);
+        employeeService.deleteEmployee(id);
     }
 
     private EmployeeDto convertToDto(Employee employee) {
@@ -81,11 +91,11 @@ public class EmployeeController {
         employee.setName(dto.getName());
         employee.setNote(dto.getNote());
         if (dto.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(dto.getDepartmentId()).orElseThrow();
+            Department department = departmentService.getDepartmentById(dto.getDepartmentId()).orElseThrow();
             employee.setDepartment(department);
         }
         if (dto.getProfessionId() != null) {
-            Profession profession = professionRepository.findById(dto.getProfessionId()).orElseThrow();
+            Profession profession = professionService.getProfessionById(dto.getProfessionId()).orElseThrow();
             employee.setProfession(profession);
         }
         return employee;
